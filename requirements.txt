@@ -1,0 +1,5 @@
+Flask
+cryptography
+psycopg2-binary
+flask-sqlalchemy
+python-dotenv

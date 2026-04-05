@@ -1,0 +1,30 @@
+# 🔑 SECRET & SENSITIVE FILES
+secret.key
+*.key
+.env
+.env.*
+
+# 🐍 PYTHON
+__pycache__/
+*.py[cod]
+*.pyc
+
+# 📦 VIRTUAL ENVIRONMENT
+venv/
+env/
+.venv/
+
+# 🗄️ DATABASE
+*.db
+*.sqlite
+*.sqlite3
+local.db
+
+# 📁 UPLOADS (temp files)
+uploads/
+encrypted_*
+decrypted_*
+temp_*
+
+# 📋 LOGS
+*.log

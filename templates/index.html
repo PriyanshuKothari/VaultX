@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VaultX — Secure File Sharing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #080a0e;
+      --surface: #0f1117;
+      --card: #14181f;
+      --border: #1e2430;
+      --border-bright: #2a3344;
+      --accent: #00e5a0;
+      --accent-dim: rgba(0,229,160,0.08);
+      --accent-glow: rgba(0,229,160,0.25);
+      --red: #ff4466;
+      --red-dim: rgba(255,68,102,0.08);
+      --text-primary: #eef0f4;
+      --text-secondary: #6b7a99;
+      --text-dim: #3a4560;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Mono', monospace;
+      background: var(--black);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── GRID BACKGROUND ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.4;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── GLOW ORBS ── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb-1 {
+      width: 500px; height: 500px;
+      background: rgba(0,229,160,0.06);
+      top: -100px; left: -100px;
+      animation: drift1 18s ease-in-out infinite;
+    }
+    .orb-2 {
+      width: 400px; height: 400px;
+      background: rgba(255,68,102,0.05);
+      bottom: -80px; right: -80px;
+      animation: drift2 22s ease-in-out infinite;
+    }
+    @keyframes drift1 {
+      0%,100% { transform: translate(0,0); }
+      50% { transform: translate(60px, 40px); }
+    }
+    @keyframes drift2 {
+      0%,100% { transform: translate(0,0); }
+      50% { transform: translate(-50px, -30px); }
+    }
+
+    /* ── WRAPPER ── */
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    header {
+      padding: 24px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+      background: rgba(8,10,14,0.6);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .logo-text {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.3rem;
+      letter-spacing: -0.5px;
+      color: var(--text-primary);
+    }
+    .logo-text span { color: var(--accent); }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border: 1px solid var(--border-bright);
+      border-radius: 100px;
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      letter-spacing: 0.5px;
+    }
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    /* ── MAIN ── */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 20px 80px;
+      gap: 48px;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      text-align: center;
+      max-width: 560px;
+      animation: fadeUp 0.7s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 14px;
+      border: 1px solid rgba(0,229,160,0.3);
+      border-radius: 100px;
+      font-size: 0.7rem;
+      color: var(--accent);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      background: var(--accent-dim);
+    }
+
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+    .hero h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+
+    .hero p {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.8;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    /* ── ALERT MESSAGES ── */
+    .alert {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      letter-spacing: 0.3px;
+      animation: slideIn 0.4s ease both;
+      max-width: 480px;
+      width: 100%;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .alert-success {
+      background: rgba(0,229,160,0.07);
+      border: 1px solid rgba(0,229,160,0.25);
+      color: var(--accent);
+    }
+    .alert-error {
+      background: var(--red-dim);
+      border: 1px solid rgba(255,68,102,0.25);
+      color: var(--red);
+    }
+    .alert-icon { font-size: 1rem; flex-shrink: 0; }
+
+    /* ── CARDS GRID ── */
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      max-width: 860px;
+      width: 100%;
+      animation: fadeUp 0.7s 0.15s ease both;
+    }
+    @media (max-width: 640px) {
+      .cards { grid-template-columns: 1fr; }
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .card-encrypt::before {
+      background: radial-gradient(ellipse at top left, rgba(0,229,160,0.06) 0%, transparent 70%);
+    }
+    .card-decrypt::before {
+      background: radial-gradient(ellipse at top right, rgba(255,68,102,0.06) 0%, transparent 70%);
+    }
+    .card:hover {
+      transform: translateY(-3px);
+    }
+    .card:hover::before { opacity: 1; }
+    .card-encrypt:hover { border-color: rgba(0,229,160,0.3); }
+    .card-decrypt:hover { border-color: rgba(255,68,102,0.3); }
+
+    /* ── CARD HEADER ── */
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .card-icon {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .icon-encrypt {
+      background: var(--accent-dim);
+      border: 1px solid rgba(0,229,160,0.2);
+    }
+    .icon-decrypt {
+      background: var(--red-dim);
+      border: 1px solid rgba(255,68,102,0.2);
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+    }
+    .card-sub {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      margin-top: 3px;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── DROP ZONE ── */
+    .dropzone {
+      border: 1.5px dashed var(--border-bright);
+      border-radius: 12px;
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.25s, background 0.25s;
+      position: relative;
+      margin-bottom: 20px;
+    }
+    .card-encrypt .dropzone:hover,
+    .card-encrypt .dropzone.dragover {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+    .card-decrypt .dropzone:hover,
+    .card-decrypt .dropzone.dragover {
+      border-color: var(--red);
+      background: var(--red-dim);
+    }
+
+    .dropzone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .drop-icon {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .drop-text {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .drop-text strong {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+    .file-name {
+      margin-top: 10px;
+      font-size: 0.72rem;
+      color: var(--accent);
+      word-break: break-all;
+      display: none;
+    }
+
+    /* ── BUTTON ── */
+    .btn {
+      width: 100%;
+      padding: 13px 20px;
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.07);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .btn:hover::after { opacity: 1; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+
+    .btn-encrypt {
+      background: var(--accent);
+      color: var(--black);
+      box-shadow: 0 4px 24px var(--accent-glow);
+    }
+    .btn-encrypt:hover {
+      box-shadow: 0 8px 32px var(--accent-glow);
+    }
+    .btn-decrypt {
+      background: var(--red);
+      color: white;
+      box-shadow: 0 4px 24px rgba(255,68,102,0.2);
+    }
+    .btn-decrypt:hover {
+      box-shadow: 0 8px 32px rgba(255,68,102,0.3);
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      max-width: 860px;
+      width: 100%;
+    }
+    .divider-line { flex: 1; height: 1px; background: var(--border); }
+    .divider-text {
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    /* ── FOOTER STATS ── */
+    .stats {
+      display: flex;
+      gap: 32px;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeUp 0.7s 0.3s ease both;
+    }
+    .stat {
+      text-align: center;
+    }
+    .stat-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+    .stat-label {
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      z-index: 1;
+    }
+    .footer-left {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+    .footer-left span { color: var(--accent); }
+    .footer-right {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🔐</div>
+      <div class="logo-text">Vault<span>X</span></div>
+    </div>
+    <div class="status-pill">
+      <div class="status-dot"></div>
+      AES-256 ACTIVE
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-badge">⚡ Fernet Encryption</div>
+      <h1>Encrypt. Protect.<br><em>Stay Private.</em></h1>
+      <p>Military-grade file encryption in your browser. No data stored, no tracking — just pure cryptographic security.</p>
+    </div>
+
+    <!-- ALERTS -->
+    {% if status == 'encrypted' %}
+    <div class="alert alert-success" id="alert">
+      <span class="alert-icon">✓</span>
+      File encrypted successfully — your download is ready.
+    </div>
+    {% elif status == 'decrypted' %}
+    <div class="alert alert-success" id="alert">
+      <span class="alert-icon">✓</span>
+      File decrypted successfully — original file restored.
+    </div>
+    {% elif status == 'error' %}
+    <div class="alert alert-error" id="alert">
+      <span class="alert-icon">✗</span>
+      Decryption failed — invalid file or wrong key.
+    </div>
+    {% endif %}
+
+    <!-- CARDS -->
+    <div class="cards">
+
+      <!-- ENCRYPT -->
+      <div class="card card-encrypt">
+        <div class="card-header">
+          <div class="card-icon icon-encrypt">🔒</div>
+          <div>
+            <div class="card-title">Encrypt File</div>
+            <div class="card-sub">AES · Fernet · Secure</div>
+          </div>
+        </div>
+        <form action="/encrypt" method="post" enctype="multipart/form-data">
+          <div class="dropzone" id="dz-enc"
+               ondragover="handleDrag(event,'dz-enc')"
+               ondragleave="handleLeave('dz-enc')"
+               ondrop="handleDrop(event,'dz-enc','fn-enc')">
+            <input type="file" name="file" required
+                   onchange="showName(this,'fn-enc')">
+            <span class="drop-icon">📁</span>
+            <div class="drop-text">
+              <strong>Drop file here</strong><br>or click to browse
+            </div>
+            <div class="file-name" id="fn-enc"></div>
+          </div>
+          <button type="submit" class="btn btn-encrypt">→ Encrypt &amp; Download</button>
+        </form>
+      </div>
+
+      <!-- DECRYPT -->
+      <div class="card card-decrypt">
+        <div class="card-header">
+          <div class="card-icon icon-decrypt">🔓</div>
+          <div>
+            <div class="card-title">Decrypt File</div>
+            <div class="card-sub">Restore · Verify · Access</div>
+          </div>
+        </div>
+        <form action="/decrypt" method="post" enctype="multipart/form-data">
+          <div class="dropzone" id="dz-dec"
+               ondragover="handleDrag(event,'dz-dec')"
+               ondragleave="handleLeave('dz-dec')"
+               ondrop="handleDrop(event,'dz-dec','fn-dec')">
+            <input type="file" name="file" required
+                   onchange="showName(this,'fn-dec')">
+            <span class="drop-icon">🔑</span>
+            <div class="drop-text">
+              <strong>Drop encrypted file</strong><br>or click to browse
+            </div>
+            <div class="file-name" id="fn-dec"></div>
+          </div>
+          <button type="submit" class="btn btn-decrypt">→ Decrypt &amp; Download</button>
+        </form>
+      </div>
+
+    </div>
+
+    <!-- DIVIDER -->
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="divider-text">How it works</div>
+      <div class="divider-line"></div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value">AES</div>
+        <div class="stat-label">Algorithm</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">256</div>
+        <div class="stat-label">Bit Key</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">0</div>
+        <div class="stat-label">Data Stored</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">∞</div>
+        <div class="stat-label">File Types</div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-left">Built by <span>Priyanshu Kothari</span></div>
+    <div class="footer-right">Files are never stored on server</div>
+  </footer>
+
+</div>
+
+<script>
+  // Auto-dismiss alert
+  const alert = document.getElementById('alert');
+  if (alert) setTimeout(() => {
+    alert.style.transition = 'opacity 0.5s';
+    alert.style.opacity = '0';
+    setTimeout(() => alert.remove(), 500);
+  }, 3500);
+
+  // Show selected file name
+  function showName(input, targetId) {
+    const el = document.getElementById(targetId);
+    if (input.files[0]) {
+      el.textContent = '📄 ' + input.files[0].name;
+      el.style.display = 'block';
+    }
+  }
+
+  // Drag & drop handlers
+  function handleDrag(e, id) {
+    e.preventDefault();
+    document.getElementById(id).classList.add('dragover');
+  }
+  function handleLeave(id) {
+    document.getElementById(id).classList.remove('dragover');
+  }
+  function handleDrop(e, dzId, fnId) {
+    e.preventDefault();
+    document.getElementById(dzId).classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const el = document.getElementById(fnId);
+      el.textContent = '📄 ' + file.name;
+      el.style.display = 'block';
+      // Assign to input
+      const input = document.querySelector(`#${dzId} input[type="file"]`);
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+    }
+  }
+</script>
+
+</body>
+</html>
